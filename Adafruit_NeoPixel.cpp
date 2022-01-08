@@ -45,6 +45,12 @@
 
 #include "Adafruit_NeoPixel.h"
 
+//Locate Delay.h file in your local Marlin copy: Marlin 2.0/Marlin/Marlin/src/HAL/shared/Delay.h
+//and enter full path to this file below
+
+//#include <replace with path to Delay.h file>
+#include "../../../src/HAL/shared/Delay.h"
+
 #ifdef TARGET_LPC1768
   #include <time.h>
 #endif
@@ -1894,8 +1900,8 @@ void Adafruit_NeoPixel::show(void) {
   }
 #endif
 #elif defined(TARGET_STM32F1)
-  uint8_t  *ptr, *end, p, bitMask;
-  uint32_t  pinMask;
+  volatile uint8_t  *ptr, *end, p, bitMask;
+  volatile uint32_t  pinMask;
 
   pinMask =  BIT(PIN_MAP[pin].gpio_bit);
   ptr     =  pixels;
@@ -1914,29 +1920,19 @@ void Adafruit_NeoPixel::show(void) {
         // data ONE high
         // min: 550 typ: 700 max: 5,500
         GPIO_SET(pin);      
-        asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop;");
+        DELAY_NS(700);  //high
         // min: 450 typ: 600 max: 5,000
         GPIO_CLEAR(pin);
-        asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop;");
+        DELAY_NS(150);  //low
       } else {
         // data ZERO high
         // min: 200  typ: 350 max: 500
         GPIO_SET(pin);
-        asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop;");
+        DELAY_NS(150);  //low
         // data low
         // min: 450 typ: 600 max: 5,000
         GPIO_CLEAR(pin);
-        asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop;");
+        DELAY_NS(750);  //low
       }
       if(bitMask >>= 1) {
         // Move on to the next pixel
